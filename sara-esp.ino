@@ -4,6 +4,9 @@
 #include <ESP8266mDNS.h>
 #include "psswd.h"
 
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x3F,20,4);
+
 #include <BME280I2C.h>
 #include <Wire.h>
 
@@ -13,7 +16,7 @@ BME280I2C bme;    // Default : forced mode, standby time = 1000 ms
 const char* ssid = STASSID;
 const char* password = STAPSK;
 
-const String version = "0.2.0";
+const String version = "0.3.0";
 
 ESP8266WebServer server(80);
 
@@ -101,6 +104,13 @@ void setup(void) {\
   Serial.print("Connected.");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0,0);
+  lcd.print("IP: ");
+  lcd.setCursor(0,1);
+  lcd.print(WiFi.localIP().toString());
   
   if (MDNS.begin("esp8266")) {
     Serial.println("MDNS responder started");
