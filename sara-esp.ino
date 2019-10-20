@@ -16,7 +16,7 @@ BME280I2C bme;    // Default : forced mode, standby time = 1000 ms
 const char* ssid = STASSID;
 const char* password = STAPSK;
 
-const String version = "0.3.2";
+const String version = "0.4.2";
 
 ESP8266WebServer server(80);
 
@@ -141,8 +141,12 @@ void setup(void) {\
   });
 
   server.on("/beep", []() {
-    beep();
-    server.send(200, "text/json", "{\"done\": true}");
+    if(server.method() == HTTP_POST) {
+      beep();
+      server.send(200, "text/json", "{\"done\": true}");
+    } else {
+      server.send(405);
+    }
   });
 
   // Used by the master server to verify if a sara-air node
