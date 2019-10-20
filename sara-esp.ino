@@ -117,12 +117,12 @@ void setup(void) {\
   }
 
   server.on("/", []() {
-    server.send(200, "text/json", "{ \"version\": " + String(version) + " }");
+    server.send(200, "text/json", "{\"version\":\"" + String(version) + "\"}");
   });
 
   // Kinda... useless _for now_
   server.on("/info", []() {
-    String res = "{\"ip_address\": \"" + WiFi.localIP().toString() + "\"}";
+    String res = "{\"ip_address\":\"" + WiFi.localIP().toString() + "\"}";
     server.send(200, "text/json", res);
   });
 
