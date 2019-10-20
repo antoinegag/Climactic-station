@@ -77,6 +77,12 @@ void beep(int delayMS = 250) {
   digitalWrite(BUZZER, LOW);
 }
 
+void doubleBeep() {
+  beep(200);
+  delay(50);
+  beep(200);  
+}
+
 void setup(void) {\
   pinMode(BUZZER, OUTPUT);
   beep();
@@ -174,10 +180,8 @@ void setup(void) {\
        return;
   }
 
-  beep(200);
-  delay(50);
-  beep(200);
   setStatus(GREEN);
+  doubleBeep();
 }
 
 String envSensorData()
