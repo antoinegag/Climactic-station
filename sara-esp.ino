@@ -13,10 +13,11 @@ BME280I2C bme;    // Default : forced mode, standby time = 1000 ms
 const char* ssid = STASSID;
 const char* password = STAPSK;
 
-const String version = "0.1.0";
+const String version = "0.2.0";
 
 ESP8266WebServer server(80);
 
+const int BUZZER = 14;
 // Status LEDs
 const int RED = 15;                   // Error
 const int YELLOW = 13;                // Booting, waiting, etc
@@ -67,7 +68,16 @@ void shutOnboardLeds() {
   digitalWrite(LED_BUILTIN, 1);
 }
 
-void setup(void) {
+void beep(int delayMS = 250) {
+  digitalWrite(BUZZER, HIGH);
+  delay(delayMS);
+  digitalWrite(BUZZER, LOW);
+}
+
+void setup(void) {\
+  pinMode(BUZZER, OUTPUT);
+  beep();
+  
   setupStatusLeds();
   setStatus(YELLOW);
   
@@ -130,7 +140,6 @@ void setup(void) {
     delay(250);
   }
 
-  // bme.chipID(); // Deprecated. See chipModel().
   switch(bme.chipModel())
   {
      case BME280::ChipModel_BME280:
@@ -145,6 +154,9 @@ void setup(void) {
        return;
   }
 
+  beep(200);
+  delay(50);
+  beep(200);
   setStatus(GREEN);
 }
 
