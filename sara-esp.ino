@@ -157,16 +157,6 @@ String envSensorData()
 
    bme.read(pres, temp, hum, tempUnit, presUnit);
    
-//   client->print("Temp: ");
-//   client->print(temp);
-//   client->print("°"+ String(tempUnit == BME280::TempUnit_Celsius ? 'C' :'F'));
-//   client->print("\t\tHumidity: ");
-//   client->print(hum);
-//   client->print("% RH");
-//   client->print("\t\tPressure: ");
-//   client->print(pres);
-//   client->println(" Pa");
-
    return "{\"temp\":" + String(temp) + ",\"humidity\":" + String(hum) + ",\"pressure\":" + String(pres) + "}";
 }
 
@@ -185,16 +175,6 @@ String envSensorDataHTML()
    res += "</body>";
 
    return res;
-   
-//   client->print("Temp: ");
-//   client->print(temp);
-//   client->print("°"+ String(tempUnit == BME280::TempUnit_Celsius ? 'C' :'F'));
-//   client->print("\t\tHumidity: ");
-//   client->print(hum);
-//   client->print("% RH");
-//   client->print("\t\tPressure: ");
-//   client->print(pres);
-//   client->println(" Pa");
 }
 
 void loop(void) {
