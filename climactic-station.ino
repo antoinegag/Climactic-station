@@ -149,9 +149,19 @@ void setup(void) {\
     }
   });
 
+  
+  server.on("/dbeep", []() {
+    if(server.method() == HTTP_POST) {
+      doubleBeep();
+      server.send(200, "text/json", "{\"done\": true}");
+    } else {
+      server.send(405);
+    }
+  });
+
   // Used by the master server to verify if a sara-air node
-  server.on("/sara-air-node", []() {
-    server.send(200, "text/json", "{\"sara-air-node\": true}");
+  server.on("/climactic-station-node", []() {
+    server.send(200, "text/json", "{\"climactic-station-node\": true}");
   });
  
   //  server.onNotFound(handleNotFound);
