@@ -1,6 +1,10 @@
-# Sara ESP
+# Climactic Station
 
-ESP8266 chip exposing HTTP based REST interface to measure environnmental data from a BME280.
+Wireless environmental data collection station.
+
+## Hardware
+- ESP8266	Controller and interface
+- BME280	Environmental data collection
 
 ## Setup
 
