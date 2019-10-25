@@ -3,6 +3,7 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include "psswd.h"
+#include "user_interface.h"
 
 #include <LiquidCrystal_I2C.h>
 LiquidCrystal_I2C lcd(0x3F,20,4);
@@ -16,7 +17,15 @@ BME280I2C bme;    // Default : forced mode, standby time = 1000 ms
 const char* ssid = STASSID;
 const char* password = STAPSK;
 
-const String version = "0.4.2";
+WiFiUDP Udp;
+unsigned int localUdpPort = 2390;
+char packetBuffer[255]; 
+char registredBuffer[] = "R";
+
+IPAddress broadcast;
+IPAddress remoteServer;
+
+const String version = "0.5.0";
 
 ESP8266WebServer server(80);
 
@@ -51,21 +60,6 @@ void setStatus(int status) {
   currentStatus = status;  
 }
 
-//void handleNotFound() {
-//  String message = "File Not Found\n\n";
-//  message += "URI: ";
-//  message += server.uri();
-//  message += "\nMethod: ";
-//  message += (server.method() == HTTP_GET) ? "GET" : "POST";
-//  message += "\nArguments: ";
-//  message += server.args();
-//  message += "\n";
-//  for (uint8_t i = 0; i < server.args(); i++) {
-//    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-//  }
-//  server.send(404, "text/plain", message);
-//}
-
 void shutOnboardLeds() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, 1);
@@ -83,6 +77,13 @@ void doubleBeep() {
   beep(200);  
 }
 
+boolean discoverServer() {
+  Serial.println("Sending discovery request");
+  Udp.beginPacket(broadcast, localUdpPort);
+  Udp.write("D");
+  Udp.endPacket();
+}
+
 void setup(void) {\
   pinMode(BUZZER, OUTPUT);
   beep();
@@ -95,6 +96,8 @@ void setup(void) {\
   Wire.begin();
   
   WiFi.mode(WIFI_STA);
+
+  wifi_set_sleep_type(NONE_SLEEP_T); //LIGHT_SLEEP_T and MODE_SLEEP_T
   WiFi.begin(ssid, password);
   Serial.println("");
 
@@ -164,8 +167,6 @@ void setup(void) {\
     server.send(200, "text/json", "{\"climactic-station-node\": true}");
   });
  
-  //  server.onNotFound(handleNotFound);
-
   server.begin();
   Serial.println("HTTP server started");
 
@@ -193,6 +194,19 @@ void setup(void) {\
        setStatus(RED);
        return;
   }
+
+  Serial.println("");
+  Udp.begin(localUdpPort);
+  Serial.print("UDP socket listening on port ");
+  Serial.println(localUdpPort);
+
+  broadcast = IPAddress( WiFi.localIP().v4() | ( ~ WiFi.subnetMask().v4() ));
+
+  Serial.print("Broadcasting on ");
+  Serial.print(broadcast);
+  Serial.println("");
+
+  discoverServer();
 
   setStatus(GREEN);
   doubleBeep();
@@ -228,6 +242,20 @@ String envSensorDataHTML()
 }
 
 void loop(void) {
+  int packetSize = Udp.parsePacket();
+  if (packetSize) {
+    int len = Udp.read(packetBuffer, 255);
+    if (len > 0) {
+      packetBuffer[len] = 0;
+    }
+
+    if(strcmp(packetBuffer, "R") == 0) {
+      Serial.print("Found server at ");
+      Serial.println(Udp.remoteIP());
+      remoteServer = Udp.remoteIP();
+    }
+  }
+
   server.handleClient();
   MDNS.update();
 }
