@@ -25,7 +25,7 @@ char registredBuffer[] = "R";
 IPAddress broadcast;
 IPAddress remoteServer;
 
-const String version = "0.5.0";
+const String version = "0.5.1";
 
 ESP8266WebServer server(80);
 
@@ -49,6 +49,10 @@ void setupStatusLeds() {
 }
 
 void setStatus(int status) {
+  if(status == currentStatus) {
+    return;
+  }
+  
   if(currentStatus != -1) {
     digitalWrite(currentStatus, LOW);
   }
@@ -98,17 +102,30 @@ void setup(void) {\
   WiFi.mode(WIFI_STA);
 
   wifi_set_sleep_type(NONE_SLEEP_T); //LIGHT_SLEEP_T and MODE_SLEEP_T
+  
   WiFi.begin(ssid, password);
   Serial.println("");
 
+  int wifiAttempts = 0;
+
   // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED) {  
     setStatus(NONE);
     delay(250);
     Serial.print(".");
     setStatus(YELLOW);
     delay(250);
+    wifiAttempts++;
+
+    if(wifiAttempts >= 50) {
+      setStatus(RED);
+      doubleBeep();
+      Serial.println("");
+      Serial.println("**ERROR: Unable to connect to network, are your credentials right?**");
+      return;
+    }
   }
+  
   Serial.println("");
   Serial.print("Connected.");
   Serial.print("IP address: ");
@@ -207,9 +224,6 @@ void setup(void) {\
   Serial.println("");
 
   discoverServer();
-
-  setStatus(GREEN);
-  doubleBeep();
 }
 
 String envSensorData()
@@ -241,7 +255,17 @@ String envSensorDataHTML()
    return res;
 }
 
+boolean remoteServerErrorShown = false;
+boolean noWifiErrorShown = false;
+
 void loop(void) {
+
+  if(WiFi.status() != WL_CONNECTED  &&  !noWifiErrorShown) {
+    setStatus(RED);
+    doubleBeep();
+    noWifiErrorShown = true;
+  }
+  
   int packetSize = Udp.parsePacket();
   if (packetSize) {
     int len = Udp.read(packetBuffer, 255);
@@ -253,9 +277,11 @@ void loop(void) {
       Serial.print("Found server at ");
       Serial.println(Udp.remoteIP());
       remoteServer = Udp.remoteIP();
+      doubleBeep();
+      setStatus(GREEN);
     }
   }
-
+  
   server.handleClient();
   MDNS.update();
 }
